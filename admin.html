@@ -1,61 +1,521 @@
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0714">
+<title>VORTEX CHORDS — ADMIN</title>
 
-const crypto = require("crypto");
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-function safeEqual(a, b) {
-  const x = Buffer.from(String(a));
-  const y = Buffer.from(String(b));
-
-  return x.length === y.length && crypto.timingSafeEqual(x, y);
+:root {
+  --bg:#090710;
+  --panel:#151020;
+  --panel2:#1d152d;
+  --purple:#a66cff;
+  --text:#f8f5ff;
+  --muted:#aaa0bb;
+  --line:#ffffff12;
+  --red:#ff5578;
 }
 
-function signToken(payload, secret) {
-  const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const signature = crypto
-    .createHmac("sha256", secret)
-    .update(data)
-    .digest("base64url");
-
-  return `${data}.${signature}`;
+* {
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
 }
 
-module.exports = async (req, res) => {
-  res.setHeader("Cache-Control", "no-store");
+body {
+  background:
+    radial-gradient(ellipse at top,#281445 0%,transparent 50%),
+    var(--bg);
+  color:var(--text);
+  font-family:Inter,sans-serif;
+  min-height:100vh;
+  padding:20px 14px 50px;
+}
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method tidak diizinkan." });
+.container {
+  max-width:850px;
+  margin:auto;
+}
+
+header {
+  padding:18px 0 28px;
+}
+
+.logo {
+  font-size:23px;
+  font-weight:800;
+  letter-spacing:1px;
+}
+
+.logo span {
+  color:var(--purple);
+}
+
+.subtitle {
+  color:var(--muted);
+  font-size:12px;
+  margin-top:7px;
+}
+
+.card {
+  background:linear-gradient(145deg,#1a1428,#100d19);
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:20px;
+  margin-bottom:16px;
+}
+
+h2 {
+  font-size:17px;
+  margin-bottom:17px;
+}
+
+input,select,textarea {
+  width:100%;
+  background:#0c0913;
+  border:1px solid #ffffff18;
+  border-radius:10px;
+  padding:13px;
+  color:white;
+  font-family:inherit;
+  font-size:13px;
+  outline:none;
+  margin-top:7px;
+  margin-bottom:14px;
+}
+
+input:focus,select:focus,textarea:focus {
+  border-color:var(--purple);
+}
+
+textarea {
+  min-height:190px;
+  resize:vertical;
+  line-height:1.7;
+}
+
+label {
+  font-size:12px;
+  font-weight:600;
+  color:#d8cce9;
+}
+
+button {
+  border:0;
+  border-radius:10px;
+  padding:12px 16px;
+  font-weight:700;
+  font-size:12px;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.primary {
+  background:linear-gradient(110deg,#8546dc,#b17cff);
+  color:white;
+  width:100%;
+}
+
+.secondary {
+  background:#ffffff12;
+  color:white;
+}
+
+.danger {
+  background:#ff55781b;
+  color:#ff7892;
+}
+
+.edit {
+  background:#a66cff20;
+  color:#c8a7ff;
+}
+
+.top {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:17px;
+}
+
+.top h2 {
+  margin:0;
+}
+
+.song {
+  background:#0e0b16;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px;
+  margin-top:10px;
+}
+
+.song-title {
+  font-size:14px;
+  font-weight:700;
+}
+
+.song-info {
+  font-size:11px;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.actions {
+  display:flex;
+  gap:8px;
+  margin-top:13px;
+}
+
+.actions button {
+  flex:1;
+}
+
+#dashboard {
+  display:none;
+}
+
+#loginPage {
+  max-width:420px;
+  margin:55px auto;
+}
+
+.message {
+  font-size:12px;
+  color:#ff8198;
+  margin-bottom:12px;
+}
+
+.hint {
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.7;
+  margin-top:-5px;
+  margin-bottom:15px;
+}
+
+.empty {
+  color:var(--muted);
+  text-align:center;
+  padding:25px 5px;
+  font-size:12px;
+}
+
+@media(min-width:600px) {
+  body {padding:30px 20px}
+  .card {padding:24px}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <div class="logo">VORTEX <span>CHORDS.</span></div>
+  <div class="subtitle">ADMIN MANAGEMENT PANEL</div>
+</header>
+
+<section id="loginPage" class="card">
+  <h2>Admin Login</h2>
+  <p class="subtitle" style="margin-bottom:18px">
+    Silakan login untuk mengelola koleksi lagu.
+  </p>
+
+  <div id="loginMessage" class="message"></div>
+
+  <label>Password Admin</label>
+  <input id="password" type="password" placeholder="Masukkan password admin">
+
+  <button class="primary" onclick="login()">LOGIN ADMIN</button>
+</section>
+
+<main id="dashboard">
+
+  <section class="card">
+    <div class="top">
+      <div>
+        <h2>Dashboard</h2>
+        <div class="subtitle">Kelola koleksi VORTEX CHORDS</div>
+      </div>
+      <button class="secondary" onclick="logout()">LOGOUT</button>
+    </div>
+
+    <div style="font-size:12px;color:#aaa0bb">
+      Total lagu: <b id="totalSongs" style="color:white">0</b>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 id="formTitle">Tambah Lagu Baru</h2>
+
+    <div id="formMessage" class="message"></div>
+
+    <form id="songForm">
+      <input type="hidden" id="songId">
+
+      <label>Judul Lagu</label>
+      <input id="title" maxlength="150" required placeholder="Contoh: Evaluasi">
+
+      <label>Nama Penyanyi</label>
+      <input id="artist" maxlength="150" required placeholder="Contoh: Hindia">
+
+      <label>Kategori</label>
+      <select id="category" required>
+        <option value="">Pilih kategori</option>
+        <option value="Pop">Pop</option>
+        <option value="Rock">Rock</option>
+        <option value="Indie">Indie</option>
+        <option value="Dangdut">Dangdut</option>
+        <option value="Religi">Religi</option>
+        <option value="Lainnya">Lainnya</option>
+      </select>
+
+      <label>Nada Dasar</label>
+      <input id="key" maxlength="10" required placeholder="Contoh: C, G, Am">
+
+      <label>Lirik dan Chord</label>
+      <textarea id="lyrics" maxlength="20000" required
+        placeholder="[C]Contoh lirik lagu&#10;[G]Lanjutan lirik lagu&#10;[Am]Bagian berikutnya"></textarea>
+
+      <div class="hint">
+        Gunakan format [C], [G], [Am], dan seterusnya sebelum bagian lirik yang menggunakan chord tersebut.
+      </div>
+
+      <button class="primary" id="saveButton" type="submit">SIMPAN LAGU</button>
+      <button class="secondary" id="cancelButton" type="button"
+        onclick="resetForm()" style="display:none;width:100%;margin-top:9px">
+        BATAL EDIT
+      </button>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="top">
+      <h2>Daftar Lagu</h2>
+      <button class="secondary" onclick="loadSongs()">REFRESH</button>
+    </div>
+
+    <div id="songList"></div>
+  </section>
+
+</main>
+</div>
+
+<script>
+const API = "/api";
+let songs = [];
+
+function getToken() {
+  return sessionStorage.getItem("vortex_admin_token") || "";
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  })[char]);
+}
+
+async function apiRequest(url, options = {}) {
+  const headers = {
+    ...(options.headers || {}),
+    Authorization: "Bearer " + getToken()
+  };
+
+  if (options.body) {
+    headers["Content-Type"] = "application/json";
   }
 
-  const password = process.env.ADMIN_PASSWORD;
-  const secret = process.env.ADMIN_SECRET;
-
-  if (!password || !secret) {
-    return res.status(500).json({
-      error: "Environment admin belum dikonfigurasi."
-    });
-  }
-
-  const submittedPassword = req.body?.password;
-
-  if (
-    typeof submittedPassword !== "string" ||
-    !safeEqual(submittedPassword, password)
-  ) {
-    return res.status(401).json({
-      error: "Password admin salah."
-    });
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-
-  const token = signToken({
-    role: "admin",
-    iat: now,
-    exp: now + 8 * 60 * 60
-  }, secret);
-
-  return res.status(200).json({
-    success: true,
-    token
+  const response = await fetch(url, {
+    ...options,
+    headers
   });
-};
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || "Permintaan gagal.");
+  }
+
+  return data;
+}
+
+async function login() {
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("loginMessage");
+
+  message.textContent = "";
+
+  try {
+    const response = await fetch(API + "/admin", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({password})
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Login gagal.");
+    }
+
+    sessionStorage.setItem("vortex_admin_token", data.token);
+
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+
+    document.getElementById("password").value = "";
+    await loadSongs();
+
+  } catch(error) {
+    message.textContent = error.message;
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem("vortex_admin_token");
+  location.reload();
+}
+
+async function loadSongs() {
+  const list = document.getElementById("songList");
+  list.innerHTML = '<div class="empty">Memuat lagu...</div>';
+
+  try {
+    const data = await apiRequest(API + "/songs");
+    songs = data.songs || [];
+
+    document.getElementById("totalSongs").textContent = songs.length;
+
+    if (!songs.length) {
+      list.innerHTML = '<div class="empty">Belum ada lagu. Silakan tambahkan lagu pertama.</div>';
+      return;
+    }
+
+    list.innerHTML = songs.map(song => `
+      <div class="song">
+        <div class="song-title">${escapeHTML(song.title)}</div>
+        <div class="song-info">
+          ${escapeHTML(song.artist)} · ${escapeHTML(song.category)} · ${escapeHTML(song.key)}
+        </div>
+        <div class="actions">
+          <button class="edit" onclick="editSong('${escapeHTML(song.id)}')">EDIT</button>
+          <button class="danger" onclick="deleteSong('${escapeHTML(song.id)}')">HAPUS</button>
+        </div>
+      </div>
+    `).join("");
+
+  } catch(error) {
+    list.innerHTML = '<div class="empty">' + escapeHTML(error.message) + '</div>';
+
+    if (error.message.toLowerCase().includes("login")) {
+      logout();
+    }
+  }
+}
+
+document.getElementById("songForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const id = document.getElementById("songId").value;
+
+  const song = {
+    id,
+    title:document.getElementById("title").value,
+    artist:document.getElementById("artist").value,
+    category:document.getElementById("category").value,
+    key:document.getElementById("key").value,
+    lyrics:document.getElementById("lyrics").value
+  };
+
+  const button = document.getElementById("saveButton");
+  const message = document.getElementById("formMessage");
+
+  button.disabled = true;
+  button.textContent = "MENYIMPAN...";
+  message.textContent = "";
+
+  try {
+    await apiRequest(API + "/songs", {
+      method:id ? "PUT" : "POST",
+      body:JSON.stringify(song)
+    });
+
+    message.style.color = "#a6ffca";
+    message.textContent = "Lagu berhasil disimpan.";
+
+    resetForm();
+    await loadSongs();
+
+  } catch(error) {
+    message.style.color = "#ff8198";
+    message.textContent = error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = "SIMPAN LAGU";
+  }
+});
+
+function editSong(id) {
+  const song = songs.find(item => item.id === id);
+  if (!song) return;
+
+  document.getElementById("songId").value = song.id;
+  document.getElementById("title").value = song.title;
+  document.getElementById("artist").value = song.artist;
+  document.getElementById("category").value = song.category;
+  document.getElementById("key").value = song.key;
+  document.getElementById("lyrics").value = song.lyrics;
+
+  document.getElementById("formTitle").textContent = "Edit Lagu";
+  document.getElementById("saveButton").textContent = "SIMPAN PERUBAHAN";
+  document.getElementById("cancelButton").style.display = "block";
+
+  document.getElementById("formTitle").scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+
+function resetForm() {
+  document.getElementById("songForm").reset();
+  document.getElementById("songId").value = "";
+  document.getElementById("formTitle").textContent = "Tambah Lagu Baru";
+  document.getElementById("saveButton").textContent = "SIMPAN LAGU";
+  document.getElementById("cancelButton").style.display = "none";
+}
+
+async function deleteSong(id) {
+  if (!confirm("Apakah Anda yakin ingin menghapus lagu ini?")) return;
+
+  try {
+    await apiRequest(API + "/songs?id=" + encodeURIComponent(id), {
+      method:"DELETE"
+    });
+
+    await loadSongs();
+    alert("Lagu berhasil dihapus.");
+
+  } catch(error) {
+    alert(error.message);
+  }
+}
+
+if (getToken()) {
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  loadSongs();
+}
+</script>
+</body>
+</html>
